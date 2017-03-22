@@ -58,3 +58,27 @@ li{
     padding-right: 4px;
     align-items: center;
 }
+.completed .todoDesc{
+      opacity: .4;
+      text-decoration: line-through;
+}
+#todoMenu{
+    position: relative;
+    left: 30px;
+    top: 5px;
+    background: #fff;
+    list-style: none;
+    padding: 6px 0;
+    -webkit-box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    min-width: 130px;
+    opacity: 1;
+}
+#todoMenu li{
+  font-size: 14px;
+}
+#todoMenu span{
+   cursor: pointer;
+}

@@ -38,13 +38,18 @@
                                27 (stop)
                                nil)}])))
 (defn todoItem []
+  (let [showingMenu (reagent/atom false)] 
   (fn [{:keys [id done title]}]
       [:li {:class (str (if done "completed "))}
-        [:div#todoItem
+        [:div#todoItem {:on-double-click #(reset! showingMenu true)}
           [:input.toggle {:type "checkbox" 
                           :checked done 
                           :on-change #(toggle id)}]
-          [:div.todoDesc title]]]))
+          [:div.todoDesc title]
+          (when @showingMenu 
+            [:div#todoMenu {:on-click #(reset! showingMenu false)}
+              [:ul
+                [:li [:span {:on-click #(delete id)} "Delete todo"]]]])]])))
 
 (defn todolist []
 (fn []
@@ -55,8 +60,7 @@
         [:div 
           [:h1 "Todo List"] 
             [:div 
-              [:a {:href "/about"} "About"]]]                                
-      
+              [:a {:href "/about"} "About"]]]                                      
         [:div.todos
             [:div#addTodos
               [todoInput {:id "todoInput"
@@ -64,9 +68,14 @@
             (when (-> items count pos?)
               [:div#activeTodoList
                 [:ul#todo-list
-                  (for [todo items]
+                  (for [todo (filter (complement :done) items)]
                     ^{:key (:id todo)} [todoItem todo])]])
-            ]]
+            (when (-> (filter :done items) count pos?)                
+              [:div#compTodoList 
+                [:h2 "Completed Todos"]
+                [:ul
+                  (for [todo (filter :done items)]
+                    ^{:key (:id todo)} [todoItem todo])]])]]
                     )))
 ;;Render pages
 (defn home-page []
@@ -74,12 +83,19 @@
 (defn about-page []
   [:div.topMenu [:h1 "About"]
    [:div [:a {:href "/"} "Todo List"]]
-   [:p "The Todo List app allows you to add, delete and mark complete todo items."] 
-    [:p "Instructions:"]
+   [:p "The Todo List app allows you to add, delete and mark complete TODO items. "]
+   [:p "Features:"]
+   [:ol
+    [:li "Add a new TODO (initially incomplete)"]
+    [:li "Mark a TODO as completed"]
+    [:li "Unmark a TODO as completed (i.e. return it to incomplete state)"]
+    [:li "Delete existing TODOs"]] 
+    [:p "Usage:"]
     [:ol 
-      [:li [:b "Add"] " -  Type in a description in the input text field and click enter"]
-      [:li [:b "Delete"] " - Double click on a todo item. Click on the 'Delete todo' link"]
-      [:li [:b "Complete"] " - Click on the checkbox next to the todo item"]]])
+      [:li [:b "Add"] " -  Type in a description in the input text field and click enter."]
+      [:li [:b "Complete"] " - Click on the checkbox next to the TODO item."]
+      [:li [:b "Delete"] " - Double click on a TODO item to get an options window. Click on the 'Delete todo' link to delete or click on the window to close."]
+      ]])
 
  (defn current-page []
   [:div [(session/get :current-page)]])
