@@ -3,17 +3,20 @@
               [reagent.session :as session]
               [secretary.core :as secretary :include-macros true]
               [accountant.core :as accountant]))
-
-(defonce currentpage (reagent/atom ""))
+              
 (defonce todos (reagent/atom (sorted-map)))
 (defonce counter (reagent/atom 0))
-;; -------------------------
-;; Views
 
-;;todo item functions
+;;Todo item functions
 (defn add [text]
   (let [id (swap! counter inc)]
     (swap! todos assoc id {:id id :title text :done false})))
+(defn save [id title] 
+  (swap! todos assoc-in [id :title] title))
+(defn delete [id] 
+  (swap! todos dissoc id))
+(defn toggle [id] 
+  (swap! todos update-in [id :done] not))
 
 (defn todoInput [{:keys [title on-save on-stop]}]
   (let [val (reagent/atom title)
@@ -34,14 +37,21 @@
                                13 (save)
                                27 (stop)
                                nil)}])))
-
+(defn todoItem []
+  (fn [{:keys [id done title]}]
+      [:li {:class (str (if done "completed "))}
+        [:div#todoItem
+          [:input.toggle {:type "checkbox" 
+                          :checked done 
+                          :on-change #(toggle id)}]
+          [:div.todoDesc title]]]))
 
 (defn todolist []
 (fn []
     (let [items (vals @todos)
           done (->> items (filter :done) count)
           active (- (count items) done)]
-      [:div
+      [:div 
         [:div 
           [:h1 "Todo List"] 
             [:div 
@@ -51,17 +61,18 @@
             [:div#addTodos
               [todoInput {:id "todoInput"
                           :on-save add}]]    
+            (when (-> items count pos?)
+              [:div#activeTodoList
+                [:ul#todo-list
+                  (for [todo items]
+                    ^{:key (:id todo)} [todoItem todo])]])
             ]]
                     )))
-
- 
-
-;;top menu
+;;Render pages
 (defn home-page []
   (todolist))
-
 (defn about-page []
-  [:div [:h2 "About"]
+  [:div.topMenu [:h1 "About"]
    [:div [:a {:href "/"} "Todo List"]]
    [:p "The Todo List app allows you to add, delete and mark complete todo items."] 
     [:p "Instructions:"]
@@ -71,8 +82,7 @@
       [:li [:b "Complete"] " - Click on the checkbox next to the todo item"]]])
 
  (defn current-page []
-  [:div [(session/get :current-page)]]
-  )
+  [:div [(session/get :current-page)]])
 
 ;; -------------------------
 ;; Routes
