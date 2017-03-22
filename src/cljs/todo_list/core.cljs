@@ -10,10 +10,55 @@
 ;; -------------------------
 ;; Views
 
+;;todo item functions
+(defn add [text]
+  (let [id (swap! counter inc)]
+    (swap! todos assoc id {:id id :title text :done false})))
+
+(defn todoInput [{:keys [title on-save on-stop]}]
+  (let [val (reagent/atom title)
+    stop #(do (reset! val "")
+      (if on-stop (on-stop)))
+    save #(let [v (-> @val str clojure.string/trim)]
+      (if-not (empty? v) (on-save v))
+      (stop))]
+    (fn [{:keys [id class]}]
+      [:input {:type "text"
+               :placeholder "Add a new todo item" 
+               :value @val
+               :id id 
+               :class class 
+               :on-blur save
+               :on-change #(reset! val (-> % .-target .-value))
+               :on-key-down #(case (.-which %)
+                               13 (save)
+                               27 (stop)
+                               nil)}])))
+
+
+(defn todolist []
+(fn []
+    (let [items (vals @todos)
+          done (->> items (filter :done) count)
+          active (- (count items) done)]
+      [:div
+        [:div 
+          [:h1 "Todo List"] 
+            [:div 
+              [:a {:href "/about"} "About"]]]                                
+      
+        [:div.todos
+            [:div#addTodos
+              [todoInput {:id "todoInput"
+                          :on-save add}]]    
+            ]]
+                    )))
+
+ 
+
 ;;top menu
 (defn home-page []
-  [:div [:h2 "Todo List"]
-   [:div [:a {:href "/about"} "About"]]])
+  (todolist))
 
 (defn about-page []
   [:div [:h2 "About"]
@@ -25,8 +70,9 @@
       [:li [:b "Delete"] " - Double click on a todo item. Click on the 'Delete todo' link"]
       [:li [:b "Complete"] " - Click on the checkbox next to the todo item"]]])
 
-(defn current-page []
-  [:div [(session/get :current-page)]])
+ (defn current-page []
+  [:div [(session/get :current-page)]]
+  )
 
 ;; -------------------------
 ;; Routes
